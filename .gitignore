@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.Python
+
+# Environment files - NEVER COMMIT SECRETS
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
+*_secret*
+*_token*
+hf_*
+AIzaSy*
+
+# Model files (too large for git)
+*.safetensors
+*.ckpt
+*.pth
+models/
+checkpoints/
+
+# Output files
+outputs/
+generated/
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+dist/
+build/
