@@ -40,6 +40,12 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="/root/.cargo/bin:$PATH"
 
 echo "📦 Cloning FIBO repository..."
+# Ensure /workspace exists (RunPod mounts it, but create if needed)
+if [ ! -d "/workspace" ]; then
+    echo "⚠️  /workspace not found, creating directory..."
+    mkdir -p /workspace
+fi
+
 cd /workspace
 git clone https://github.com/Bria-AI/FIBO.git
 cd FIBO
