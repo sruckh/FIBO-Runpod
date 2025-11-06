@@ -62,7 +62,7 @@ source .venv/bin/activate
 # Authenticate with Hugging Face if token provided
 if [ -n "$HF_TOKEN" ]; then
     echo "🔐 Authenticating with Hugging Face..."
-    huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
+    hf auth login --token "$HF_TOKEN" --add-to-git-credential
 else
     echo "⚠️  WARNING: HF_TOKEN not set - model download will fail!"
     echo "   Please set HF_TOKEN environment variable in RunPod"

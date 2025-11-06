@@ -227,8 +227,7 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                     refine_json = gr.Code(
                         label="Structured Prompt (JSON)",
                         language="json",
-                        lines=10,
-                        placeholder='{\n  "subject": "...",\n  "style": "...",\n  ...\n}'
+                        lines=10
                     )
                     refine_prompt = gr.Textbox(
                         label="Refinement Instruction (Optional)",
