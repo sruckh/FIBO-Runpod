@@ -17,17 +17,7 @@ if [ -d "/workspace/FIBO" ] && [ -f "/workspace/.fibo_installed" ]; then
     # Activate virtual environment and launch Gradio
     source .venv/bin/activate
     echo "🚀 Launching Gradio application..."
-    # Use same detection logic as first install
-    if [ -f "app.py" ]; then
-        python app.py
-    elif command -v fibo &> /dev/null; then
-        fibo
-    elif [ -f "gradio_app.py" ]; then
-        python gradio_app.py
-    else
-        echo "❌ ERROR: Could not find Gradio app entry point!"
-        exit 1
-    fi
+    gradio
     exit 0
 fi
 
@@ -60,32 +50,11 @@ echo "✅ Installation complete!"
 export HF_TOKEN="${HF_TOKEN:-}"
 export GOOGLE_API_KEY="${GOOGLE_API_KEY:-}"
 
-echo "🔍 DEBUG: Listing installed files..."
-ls -la
-echo ""
-echo "🔍 DEBUG: Checking .venv/bin for installed commands..."
+# Activate virtual environment
 source .venv/bin/activate
-ls -la .venv/bin/ | grep -E "fibo|gradio|app" || echo "No obvious entry points found"
-echo ""
-echo "🔍 DEBUG: Checking installed Python packages..."
-pip list | grep -i fibo || echo "FIBO package not found"
-echo ""
 
 touch /workspace/.fibo_installed
 
 echo "🚀 Launching Gradio application..."
-# Try common entry points - adjust based on debug output
-if [ -f "app.py" ]; then
-    echo "Found app.py, launching..."
-    python app.py
-elif command -v fibo &> /dev/null; then
-    echo "Found 'fibo' command, launching..."
-    fibo
-elif [ -f "gradio_app.py" ]; then
-    echo "Found gradio_app.py, launching..."
-    python gradio_app.py
-else
-    echo "❌ ERROR: Could not find Gradio app entry point!"
-    echo "Please check debug output above to determine correct launch command."
-    exit 1
-fi
+# Launch the gradio command installed by uv sync
+gradio
