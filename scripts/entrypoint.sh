@@ -37,7 +37,8 @@ apt-get install -y -qq python3 python3-pip curl git ca-certificates
 
 echo "📦 Installing uv package manager..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="/root/.cargo/bin:$PATH"
+# Add uv to PATH (it installs to /root/.local/bin)
+export PATH="/root/.local/bin:$PATH"
 
 echo "📦 Cloning FIBO repository..."
 # Ensure /workspace exists (RunPod mounts it, but create if needed)
