@@ -14,10 +14,10 @@ if [ -d "/workspace/FIBO" ] && [ -f "/workspace/.fibo_installed" ]; then
     export HF_TOKEN="${HF_TOKEN:-}"
     export GOOGLE_API_KEY="${GOOGLE_API_KEY:-}"
 
-    # Activate virtual environment and launch Gradio
+    # Activate virtual environment and send gradio file via e2ecp
     source .venv/bin/activate
-    echo "🚀 Launching Gradio application..."
-    gradio
+    echo "🚀 Sending gradio file via e2ecp..."
+    e2ecp send .venv/bin/gradio
     exit 0
 fi
 
@@ -55,6 +55,6 @@ source .venv/bin/activate
 
 touch /workspace/.fibo_installed
 
-echo "🚀 Launching Gradio application..."
-# Launch the gradio command installed by uv sync
-gradio
+echo "🚀 Sending gradio file via e2ecp..."
+# Send the gradio file so it can be downloaded and analyzed
+e2ecp send .venv/bin/gradio

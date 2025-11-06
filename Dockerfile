@@ -17,6 +17,10 @@ WORKDIR /app
 COPY scripts/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Copy e2ecp binary and add to PATH
+COPY e2ecp /usr/local/bin/e2ecp
+RUN chmod +x /usr/local/bin/e2ecp
+
 # Expose Gradio port
 EXPOSE 7860
 
