@@ -17,6 +17,9 @@ WORKDIR /app
 COPY scripts/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Copy Gradio app
+COPY app.py /app/app.py
+
 # Copy e2ecp binary and add to PATH
 COPY e2ecp /usr/local/bin/e2ecp
 RUN chmod +x /usr/local/bin/e2ecp

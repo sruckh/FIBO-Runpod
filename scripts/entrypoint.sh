@@ -14,10 +14,16 @@ if [ -d "/workspace/FIBO" ] && [ -f "/workspace/.fibo_installed" ]; then
     export HF_TOKEN="${HF_TOKEN:-}"
     export GOOGLE_API_KEY="${GOOGLE_API_KEY:-}"
 
-    # Activate virtual environment and send gradio file via e2ecp
+    # Activate virtual environment and launch Gradio app
     source .venv/bin/activate
-    echo "🚀 Sending gradio file via e2ecp..."
-    e2ecp send .venv/bin/gradio
+
+    # Copy app.py to FIBO directory if not present
+    if [ ! -f "app.py" ]; then
+        cp /app/app.py .
+    fi
+
+    echo "🚀 Launching FIBO Gradio application..."
+    python app.py
     exit 0
 fi
 
@@ -53,8 +59,20 @@ export GOOGLE_API_KEY="${GOOGLE_API_KEY:-}"
 # Activate virtual environment
 source .venv/bin/activate
 
+# Authenticate with Hugging Face if token provided
+if [ -n "$HF_TOKEN" ]; then
+    echo "🔐 Authenticating with Hugging Face..."
+    huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
+else
+    echo "⚠️  WARNING: HF_TOKEN not set - model download will fail!"
+    echo "   Please set HF_TOKEN environment variable in RunPod"
+fi
+
 touch /workspace/.fibo_installed
 
-echo "🚀 Sending gradio file via e2ecp..."
-# Send the gradio file so it can be downloaded and analyzed
-e2ecp send .venv/bin/gradio
+# Copy app.py to FIBO directory
+cp /app/app.py .
+
+echo "🚀 Launching FIBO Gradio application..."
+# Launch the Gradio app
+python app.py
