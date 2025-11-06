@@ -10,6 +10,19 @@ import json
 from pathlib import Path
 import gradio as gr
 
+# Aspect ratio to resolution mapping (format: "WIDTH HEIGHT")
+ASPECT_TO_RESOLUTION = {
+    "1:1": "1024 1024",
+    "2:3": "832 1248",
+    "3:2": "1248 832",
+    "3:4": "896 1152",
+    "4:3": "1152 896",
+    "4:5": "896 1088",
+    "5:4": "1088 896",
+    "9:16": "768 1344",
+    "16:9": "1344 768",
+}
+
 def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt, guidance_scale):
     """Generate image from text prompt"""
     try:
@@ -24,8 +37,9 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
             cmd.extend(["--seed", str(int(seed))])
         if steps is not None:
             cmd.extend(["--steps", str(int(steps))])
-        if aspect_ratio:
-            cmd.extend(["--aspect-ratio", aspect_ratio])
+        if aspect_ratio and aspect_ratio in ASPECT_TO_RESOLUTION:
+            resolution = ASPECT_TO_RESOLUTION[aspect_ratio]
+            cmd.extend(["--resolution", resolution])
         if negative_prompt and negative_prompt.strip():
             cmd.extend(["--negative-prompt", negative_prompt])
         if guidance_scale is not None:
@@ -182,9 +196,10 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                             label="Steps"
                         )
                         gen_aspect = gr.Dropdown(
-                            choices=["1:1", "16:9", "9:16", "4:3", "3:4"],
+                            choices=["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
                             value="1:1",
-                            label="Aspect Ratio"
+                            label="Aspect Ratio",
+                            info="Converts to model resolution automatically"
                         )
                         gen_negative = gr.Textbox(
                             label="Negative Prompt",
