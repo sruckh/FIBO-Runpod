@@ -1,10 +1,13 @@
 # Minimal CUDA base image for FIBO RunPod deployment
-FROM nvidia/cuda:12.4.0-runtime-ubuntu22.04
+FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu24.04
 
 # Metadata
 LABEL maintainer="fibo-runpod"
 LABEL description="FIBO text-to-image model for RunPod - minimal runtime image"
-LABEL version="1.0.0"
+LABEL version="1.1.0"
+LABEL cuda.version="12.8.0"
+LABEL python.version="3.12"
+LABEL ubuntu.version="24.04"
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive

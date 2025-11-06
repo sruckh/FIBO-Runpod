@@ -29,7 +29,11 @@ fi
 
 echo "📦 Installing system dependencies..."
 apt-get update -qq
-apt-get install -y -qq python3 python3-pip curl git ca-certificates
+apt-get install -y -qq python3.12 python3.12-venv python3-pip curl git ca-certificates
+
+# Set Python 3.12 as default python3
+update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
+update-alternatives --set python3 /usr/bin/python3.12
 
 echo "📦 Installing uv package manager..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
