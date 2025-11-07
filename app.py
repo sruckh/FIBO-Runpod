@@ -29,12 +29,10 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_path = tmp.name
 
-        # Also create temp file for structured JSON output
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
-            json_output_path = tmp_json.name
+        # FIBO automatically creates {output_path}.json with structured prompt
+        json_output_path = output_path + ".json"
 
         cmd = ["python", "generate.py", "--prompt", prompt, "--output", output_path]
-        cmd.extend(["--structured-output", json_output_path])
 
         if model_mode:
             cmd.extend(["--model-mode", model_mode])
@@ -99,12 +97,10 @@ def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_path = tmp.name
 
-        # Also create temp file for structured JSON output
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
-            json_output_path = tmp_json.name
+        # FIBO automatically creates {output_path}.json with structured prompt
+        json_output_path = output_path + ".json"
 
         cmd = ["python", "generate.py", "--output", output_path]
-        cmd.extend(["--structured-output", json_output_path])
 
         # If source image is provided, use it as reference
         if source_image and os.path.exists(source_image):
@@ -177,12 +173,14 @@ def run_inspire(reference_image, prompt, seed):
         if not reference_image or not os.path.exists(reference_image):
             return "❌ Error: No image provided or file not found", ""
 
-        # Create temp file for structured JSON output
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
-            json_output_path = tmp_json.name
+        # Need an output path for FIBO (it creates {output}.json automatically)
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            output_path = tmp.name
 
-        cmd = ["python", "generate.py", "--image-path", reference_image]
-        cmd.extend(["--structured-output", json_output_path])
+        # FIBO automatically creates {output_path}.json with structured prompt
+        json_output_path = output_path + ".json"
+
+        cmd = ["python", "generate.py", "--image-path", reference_image, "--output", output_path]
 
         if prompt and prompt.strip():
             cmd.extend(["--prompt", prompt])
