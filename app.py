@@ -48,7 +48,7 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
         if guidance_scale is not None:
             cmd.extend(["--guidance-scale", str(guidance_scale)])
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
         if result.returncode != 0:
             return None, f"❌ Error:\n{result.stderr}", ""
@@ -84,7 +84,7 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
         return output_path, f"✅ Generated successfully!\n\n{result.stdout}", structured_json
 
     except subprocess.TimeoutExpired:
-        return None, "⏱️ Timeout: Generation took >5 minutes", ""
+        return None, "⏱️ Timeout: Generation took >10 minutes", ""
     except Exception as e:
         return None, f"❌ Error: {str(e)}", ""
 
@@ -121,7 +121,7 @@ def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
         if seed is not None:
             cmd.extend(["--seed", str(int(seed))])
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
         # Cleanup temp files
         try:
@@ -162,7 +162,7 @@ def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
         return output_path, f"✅ Refined successfully!\n\n{result.stdout}", structured_json
 
     except subprocess.TimeoutExpired:
-        return None, "⏱️ Timeout: Refinement took >5 minutes", ""
+        return None, "⏱️ Timeout: Refinement took >10 minutes", ""
     except Exception as e:
         return None, f"❌ Error: {str(e)}", ""
 
@@ -187,7 +187,7 @@ def run_inspire(reference_image, prompt, seed):
         if seed is not None:
             cmd.extend(["--seed", str(int(seed))])
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
         if result.returncode != 0:
             return f"❌ Error:\n{result.stderr}", ""
@@ -221,7 +221,7 @@ def run_inspire(reference_image, prompt, seed):
         return f"✅ Prompt extracted successfully!\n\n{result.stdout}", structured_json
 
     except subprocess.TimeoutExpired:
-        return "⏱️ Timeout: Inspire took >5 minutes", ""
+        return "⏱️ Timeout: Inspire took >10 minutes", ""
     except Exception as e:
         return f"❌ Error: {str(e)}", ""
 
