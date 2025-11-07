@@ -29,7 +29,12 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_path = tmp.name
 
+        # Also create temp file for structured JSON output
+        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
+            json_output_path = tmp_json.name
+
         cmd = ["python", "generate.py", "--prompt", prompt, "--output", output_path]
+        cmd.extend(["--structured-output", json_output_path])
 
         if model_mode:
             cmd.extend(["--model-mode", model_mode])
@@ -50,14 +55,31 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
         if result.returncode != 0:
             return None, f"❌ Error:\n{result.stderr}", ""
 
-        # Try to extract structured prompt from output
+        # Read structured JSON from file if it exists
         structured_json = ""
-        if "structured" in result.stdout.lower() or "{" in result.stdout:
+        try:
+            if os.path.exists(json_output_path):
+                with open(json_output_path, 'r') as f:
+                    structured_json = f.read()
+                os.unlink(json_output_path)
+        except Exception as e:
+            # Fallback: try to extract from stdout
             try:
-                # Find JSON in output
                 start = result.stdout.find("{")
                 if start != -1:
-                    structured_json = result.stdout[start:]
+                    # Find matching closing brace
+                    brace_count = 0
+                    for i, char in enumerate(result.stdout[start:]):
+                        if char == "{":
+                            brace_count += 1
+                        elif char == "}":
+                            brace_count -= 1
+                            if brace_count == 0:
+                                structured_json = result.stdout[start:start + i + 1]
+                                # Pretty print the JSON
+                                import json as json_lib
+                                structured_json = json_lib.dumps(json_lib.loads(structured_json), indent=2)
+                                break
             except:
                 pass
 
@@ -68,43 +90,78 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
     except Exception as e:
         return None, f"❌ Error: {str(e)}", ""
 
-def run_refine(structured_prompt_json, refinement_prompt, seed):
+def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
     """Refine existing image using structured prompt + refinement instruction"""
     try:
-        # Save structured prompt to temp file
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
-            tmp_json.write(structured_prompt_json)
-            json_path = tmp_json.name
+        # If source image provided, use image-to-image mode
+        # Otherwise, use structured prompt refinement mode
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             output_path = tmp.name
 
-        cmd = ["python", "generate.py", "--structured-prompt", json_path, "--output", output_path]
+        # Also create temp file for structured JSON output
+        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
+            json_output_path = tmp_json.name
 
+        cmd = ["python", "generate.py", "--output", output_path]
+        cmd.extend(["--structured-output", json_output_path])
+
+        # If source image is provided, use it as reference
+        if source_image and os.path.exists(source_image):
+            cmd.extend(["--image-path", source_image])
+
+        # If structured JSON is provided, save it and use it
+        json_path = None
+        if structured_prompt_json and structured_prompt_json.strip():
+            with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json_input:
+                tmp_json_input.write(structured_prompt_json)
+                json_path = tmp_json_input.name
+            cmd.extend(["--structured-prompt", json_path])
+
+        # Add refinement prompt if provided
         if refinement_prompt and refinement_prompt.strip():
             cmd.extend(["--prompt", refinement_prompt])
+
         if seed is not None:
             cmd.extend(["--seed", str(int(seed))])
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
-        # Cleanup temp JSON
+        # Cleanup temp files
         try:
-            os.unlink(json_path)
+            if json_path:
+                os.unlink(json_path)
         except:
             pass
 
         if result.returncode != 0:
             return None, f"❌ Error:\n{result.stderr}", ""
 
-        # Extract updated structured prompt
+        # Read structured JSON from file if it exists
         structured_json = ""
         try:
-            start = result.stdout.find("{")
-            if start != -1:
-                structured_json = result.stdout[start:]
-        except:
-            pass
+            if os.path.exists(json_output_path):
+                with open(json_output_path, 'r') as f:
+                    structured_json = f.read()
+                os.unlink(json_output_path)
+        except Exception as e:
+            # Fallback: try to extract from stdout
+            try:
+                start = result.stdout.find("{")
+                if start != -1:
+                    brace_count = 0
+                    for i, char in enumerate(result.stdout[start:]):
+                        if char == "{":
+                            brace_count += 1
+                        elif char == "}":
+                            brace_count -= 1
+                            if brace_count == 0:
+                                structured_json = result.stdout[start:start + i + 1]
+                                import json as json_lib
+                                structured_json = json_lib.dumps(json_lib.loads(structured_json), indent=2)
+                                break
+            except:
+                pass
 
         return output_path, f"✅ Refined successfully!\n\n{result.stdout}", structured_json
 
@@ -116,12 +173,16 @@ def run_refine(structured_prompt_json, refinement_prompt, seed):
 def run_inspire(reference_image, prompt, seed):
     """Generate structured prompt from reference image"""
     try:
-        # Save uploaded image to temp file
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-            tmp_img.write(reference_image)
-            image_path = tmp_img.name
+        # reference_image is already a file path from gr.Image with type="filepath"
+        if not reference_image or not os.path.exists(reference_image):
+            return "❌ Error: No image provided or file not found", ""
 
-        cmd = ["python", "generate.py", "--image-path", image_path]
+        # Create temp file for structured JSON output
+        with tempfile.NamedTemporaryFile(mode='w', suffix=".json", delete=False) as tmp_json:
+            json_output_path = tmp_json.name
+
+        cmd = ["python", "generate.py", "--image-path", reference_image]
+        cmd.extend(["--structured-output", json_output_path])
 
         if prompt and prompt.strip():
             cmd.extend(["--prompt", prompt])
@@ -130,23 +191,34 @@ def run_inspire(reference_image, prompt, seed):
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
-        # Cleanup temp image
-        try:
-            os.unlink(image_path)
-        except:
-            pass
-
         if result.returncode != 0:
             return f"❌ Error:\n{result.stderr}", ""
 
-        # Extract structured prompt
+        # Read structured JSON from file if it exists
         structured_json = ""
         try:
-            start = result.stdout.find("{")
-            if start != -1:
-                structured_json = result.stdout[start:]
-        except:
-            pass
+            if os.path.exists(json_output_path):
+                with open(json_output_path, 'r') as f:
+                    structured_json = f.read()
+                os.unlink(json_output_path)
+        except Exception as e:
+            # Fallback: try to extract from stdout
+            try:
+                start = result.stdout.find("{")
+                if start != -1:
+                    brace_count = 0
+                    for i, char in enumerate(result.stdout[start:]):
+                        if char == "{":
+                            brace_count += 1
+                        elif char == "}":
+                            brace_count -= 1
+                            if brace_count == 0:
+                                structured_json = result.stdout[start:start + i + 1]
+                                import json as json_lib
+                                structured_json = json_lib.dumps(json_lib.loads(structured_json), indent=2)
+                                break
+            except:
+                pass
 
         return f"✅ Prompt extracted successfully!\n\n{result.stdout}", structured_json
 
@@ -235,20 +307,27 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
         # REFINE TAB
         with gr.Tab("Refine"):
             gr.Markdown("### Refine existing images with new instructions")
-            gr.Markdown("**Use the structured JSON from Generate tab or create your own**")
+            gr.Markdown("**Option 1:** Upload a source image to refine  \n**Option 2:** Use structured JSON from Generate tab  \n**Option 3:** Use both for maximum control")
 
             with gr.Row():
                 with gr.Column(scale=1):
+                    refine_source = gr.Image(
+                        label="Source Image (Optional)",
+                        type="filepath",
+                        sources=["upload", "clipboard"],
+                        info="Upload image from Generate tab or any other source"
+                    )
                     refine_json = gr.Code(
-                        label="Structured Prompt (JSON)",
+                        label="Structured Prompt (JSON, Optional)",
                         language="json",
-                        lines=10
+                        lines=8,
+                        info="Paste JSON from Generate tab or create custom"
                     )
                     refine_prompt = gr.Textbox(
-                        label="Refinement Instruction (Optional)",
+                        label="Refinement Instruction",
                         placeholder="Make the sky more dramatic with clouds...",
                         lines=3,
-                        info="Additional instructions for modification"
+                        info="Describe how to modify the image"
                     )
                     refine_seed = gr.Number(
                         label="Seed",
@@ -270,7 +349,7 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
 
             refine_btn.click(
                 fn=run_refine,
-                inputs=[refine_json, refine_prompt, refine_seed],
+                inputs=[refine_source, refine_json, refine_prompt, refine_seed],
                 outputs=[refine_image, refine_status, refine_structured]
             )
 
