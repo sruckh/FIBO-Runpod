@@ -1,6 +1,107 @@
-# FIBO RunPod - Text-to-Image Generation
+# 🎨 FIBO RunPod - Text-to-Image Generation
 
-Docker image for deploying [FIBO](https://github.com/Bria-AI/FIBO) (8B parameter JSON-native text-to-image model) on RunPod GPU instances.
+[![Docker Hub](https://img.shields.io/docker/v/gemneye/fibo-runpod?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/gemneye/fibo-runpod)
+[![Docker Pulls](https://img.shields.io/docker/pulls/gemneye/fibo-runpod)](https://hub.docker.com/r/gemneye/fibo-runpod)
+[![GitHub](https://img.shields.io/badge/GitHub-sruckh%2FFIBO--Runpod-blue?logo=github)](https://github.com/sruckh/FIBO-Runpod)
+
+**Production-ready Docker container for deploying [FIBO](https://github.com/Bria-AI/FIBO) (8B parameter JSON-native text-to-image AI model) on RunPod GPU cloud platform.**
+
+This container provides a complete Gradio web interface with three generation modes (Generate, Refine, Inspire) for professional-grade, controllable image synthesis using structured JSON prompts.
+
+---
+
+## 📖 Repository Overview
+
+### What This Image Provides
+
+This Docker image is a **minimal runtime container** (~2GB base) that automatically installs FIBO and all dependencies at startup on RunPod's persistent storage. It includes:
+
+- ✅ **Complete Gradio Web Interface** - Three-mode UI (Generate/Refine/Inspire) with all FIBO features
+- ✅ **Automatic Installation** - Downloads and configures Python, PyTorch, FIBO, and models on first run
+- ✅ **Persistent Caching** - Models and dependencies cached on RunPod volume for fast restarts (<30s)
+- ✅ **GPU-Optimized** - CUDA 12.8.0 + cuDNN on Ubuntu 24.04 for maximum performance
+- ✅ **Environment-Driven Config** - All settings via environment variables (HF_TOKEN, GOOGLE_API_KEY, etc.)
+- ✅ **Gradio Share Links** - Reliable access via public gradio.live URLs (bypasses unreliable RunPod proxy)
+- ✅ **Health Monitoring** - Built-in health checks and comprehensive logging
+
+### Quick Deploy to RunPod
+
+**1. Pull Image:**
+```bash
+docker pull gemneye/fibo-runpod:latest
+```
+
+**2. Configure in RunPod:**
+- **Image**: `gemneye/fibo-runpod:latest`
+- **GPU**: NVIDIA A100 40GB/80GB, H100, or RTX 6000 Ada (48GB+ VRAM required)
+- **Volume**: `/workspace` (50GB-100GB persistent storage)
+- **Port**: `7860/http` (Gradio interface)
+- **Environment Variables**:
+  - `HF_TOKEN=hf_xxxxx` (REQUIRED - get from https://huggingface.co/settings/tokens)
+  - `GOOGLE_API_KEY=AIzaSyxxxxx` (OPTIONAL - for Gemini VLM, otherwise uses local)
+  - `GRADIO_SHARE=true` (RECOMMENDED - creates stable gradio.live link)
+
+**3. Launch & Access:**
+- First startup: 5-10 minutes (downloads ~8GB models)
+- Check pod logs for: `Running on public URL: https://xxxxx.gradio.live`
+- Access Gradio UI via share link or RunPod port 7860
+- Subsequent restarts: <30 seconds (cached)
+
+### How to Use
+
+**Generate Mode** 🎨 - Create images from text:
+```
+Input: "A serene lake at sunset with mountains in the background"
+Output: Generated image + Structured JSON prompt
+```
+
+**Refine Mode** ✨ - Modify existing images:
+```
+Input: Source image + "Make the sky more dramatic with clouds"
+Output: Refined image + Updated JSON prompt
+```
+
+**Inspire Mode** 🔍 - Extract prompts from images:
+```
+Input: Upload reference image
+Output: Structured JSON prompt describing the image
+```
+
+### Container Architecture
+
+```
+┌─────────────────────────────────┐
+│ Minimal Base Image (~2GB)       │
+│ - CUDA 12.8.0 + cuDNN          │
+│ - Ubuntu 24.04 LTS              │
+│ - Entrypoint script only        │
+└─────────────────────────────────┘
+           ↓ Runtime Installation
+┌─────────────────────────────────┐
+│ /workspace (RunPod Volume)      │
+│ - Python 3.12 + PyTorch 2.8.0+  │
+│ - FIBO model + dependencies     │
+│ - Cached models (~8GB)          │
+│ - Generated images              │
+└─────────────────────────────────┘
+           ↓ Launch
+┌─────────────────────────────────┐
+│ Gradio Web Interface            │
+│ - Port 7860                     │
+│ - Three generation modes        │
+│ - Real-time generation          │
+└─────────────────────────────────┘
+```
+
+### Why This Approach?
+
+- **Faster Pulls**: 2GB base vs 10GB+ bloated images
+- **Easy Updates**: Dependencies updated at runtime, not baked into image
+- **Cost Efficient**: Less Docker Hub storage, less RunPod bandwidth
+- **Flexible**: Test different model/dependency versions without rebuilding
+- **Persistent**: RunPod volume caches everything, installation only happens once
+
+---
 
 ## 🎨 What is FIBO?
 
