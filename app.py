@@ -30,7 +30,7 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
             output_path = tmp.name
 
         # FIBO automatically creates {output_path}.json with structured prompt
-        json_output_path = output_path + ".json"
+        json_output_path = str(Path(output_path).with_suffix(".json"))
 
         cmd = ["python", "generate.py", "--prompt", prompt, "--output", output_path]
 
@@ -98,7 +98,7 @@ def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
             output_path = tmp.name
 
         # FIBO automatically creates {output_path}.json with structured prompt
-        json_output_path = output_path + ".json"
+        json_output_path = str(Path(output_path).with_suffix(".json"))
 
         cmd = ["python", "generate.py", "--output", output_path]
 
@@ -178,7 +178,7 @@ def run_inspire(reference_image, prompt, seed):
             output_path = tmp.name
 
         # FIBO automatically creates {output_path}.json with structured prompt
-        json_output_path = output_path + ".json"
+        json_output_path = str(Path(output_path).with_suffix(".json"))
 
         cmd = ["python", "generate.py", "--image-path", reference_image, "--output", output_path]
 
