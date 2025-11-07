@@ -249,14 +249,12 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                         gen_model_mode = gr.Radio(
                             choices=["gemini", "local"],
                             value="gemini",
-                            label="VLM Mode",
-                            info="Gemini requires GOOGLE_API_KEY"
+                            label="VLM Mode (Gemini requires GOOGLE_API_KEY)"
                         )
                         gen_seed = gr.Number(
-                            label="Seed",
+                            label="Seed (Optional: for reproducibility)",
                             value=None,
-                            precision=0,
-                            info="Optional: for reproducibility"
+                            precision=0
                         )
 
                     with gr.Accordion("Advanced Settings", open=False):
@@ -270,8 +268,7 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                         gen_aspect = gr.Dropdown(
                             choices=["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
                             value="1:1",
-                            label="Aspect Ratio",
-                            info="Converts to model resolution automatically"
+                            label="Aspect Ratio (converts to resolution automatically)"
                         )
                         gen_negative = gr.Textbox(
                             label="Negative Prompt",
@@ -312,22 +309,19 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
             with gr.Row():
                 with gr.Column(scale=1):
                     refine_source = gr.Image(
-                        label="Source Image (Optional)",
+                        label="Source Image (Optional - upload from Generate tab or other source)",
                         type="filepath",
-                        sources=["upload", "clipboard"],
-                        info="Upload image from Generate tab or any other source"
+                        sources=["upload", "clipboard"]
                     )
                     refine_json = gr.Code(
-                        label="Structured Prompt (JSON, Optional)",
+                        label="Structured Prompt (JSON, Optional - paste from Generate tab)",
                         language="json",
-                        lines=8,
-                        info="Paste JSON from Generate tab or create custom"
+                        lines=8
                     )
                     refine_prompt = gr.Textbox(
-                        label="Refinement Instruction",
+                        label="Refinement Instruction (describe modifications)",
                         placeholder="Make the sky more dramatic with clouds...",
-                        lines=3,
-                        info="Describe how to modify the image"
+                        lines=3
                     )
                     refine_seed = gr.Number(
                         label="Seed",
@@ -366,10 +360,9 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                         sources=["upload", "clipboard"]
                     )
                     inspire_prompt = gr.Textbox(
-                        label="Additional Prompt (Optional)",
+                        label="Additional Prompt (Optional - guide extraction)",
                         placeholder="Focus on artistic style...",
-                        lines=3,
-                        info="Guide the prompt extraction"
+                        lines=3
                     )
                     inspire_seed = gr.Number(
                         label="Seed",
