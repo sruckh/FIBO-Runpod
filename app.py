@@ -88,7 +88,7 @@ def run_generate(prompt, model_mode, seed, steps, aspect_ratio, negative_prompt,
     except Exception as e:
         return None, f"❌ Error: {str(e)}", ""
 
-def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
+def run_refine(source_image, structured_prompt_json, refinement_prompt, seed, aspect_ratio):
     """Refine existing image using structured prompt + refinement instruction"""
     try:
         # If source image provided, use image-to-image mode
@@ -120,6 +120,9 @@ def run_refine(source_image, structured_prompt_json, refinement_prompt, seed):
 
         if seed is not None:
             cmd.extend(["--seed", str(int(seed))])
+        if aspect_ratio and aspect_ratio in ASPECT_TO_RESOLUTION:
+            resolution = ASPECT_TO_RESOLUTION[aspect_ratio]
+            cmd.extend(["--resolution", resolution])
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
@@ -321,11 +324,18 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
                         placeholder="Make the sky more dramatic with clouds...",
                         lines=3
                     )
-                    refine_seed = gr.Number(
-                        label="Seed",
-                        value=None,
-                        precision=0
-                    )
+
+                    with gr.Row():
+                        refine_seed = gr.Number(
+                            label="Seed",
+                            value=None,
+                            precision=0
+                        )
+                        refine_aspect = gr.Dropdown(
+                            choices=["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9"],
+                            value="1:1",
+                            label="Aspect Ratio (converts to resolution automatically)"
+                        )
 
                     refine_btn = gr.Button("✨ Refine Image", variant="primary")
 
@@ -341,7 +351,7 @@ with gr.Blocks(title="FIBO Text-to-Image", theme=gr.themes.Soft()) as demo:
 
             refine_btn.click(
                 fn=run_refine,
-                inputs=[refine_source, refine_json, refine_prompt, refine_seed],
+                inputs=[refine_source, refine_json, refine_prompt, refine_seed, refine_aspect],
                 outputs=[refine_image, refine_status, refine_structured]
             )
 
